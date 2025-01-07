@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "outDir": "./prod", // Compiled JavaScript files go here
+    "rootDir": "./src", // Source TypeScript files are located here
+    "target": "ES6", // Choose a target version of JavaScript
+    "module": "CommonJS", // Module system (use ESNext if using ES modules)
+    "strict": true, // Enable strict type-checking options
+    "esModuleInterop": true, // Allow default imports from CommonJS modules
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true // Skip type checking of declaration files
+  },
+  "include": ["src/**/*"], // Include all .ts files in the src folder
+  "exclude": ["node_modules"] // Exclude node_modules
+}
