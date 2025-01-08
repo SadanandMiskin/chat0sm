@@ -1,25 +1,32 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { webScrapArray } from "../types/types";
-
-const {GEMINI_API} = process.env
-
-class llmResponse{
-  private webScrappedData: webScrapArray;
-  private query: string;
-
-  constructor(query: string, scrappedData: webScrapArray) {
-    this.query = query
-    this.webScrappedData = scrappedData;
-    // this.llmRequestData(this.webScrappedData);
-  }
-  public async llmRequestData() {
-    try {
-      if(!GEMINI_API){
-        throw new Error("ENV KEY required")
-      }
-      const genAI = new GoogleGenerativeAI(GEMINI_API);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.llmGenerateResponse = llmGenerateResponse;
+const generative_ai_1 = require("@google/generative-ai");
+const { GEMINI_API } = process.env;
+class llmResponse {
+    constructor(query, scrappedData) {
+        this.query = query;
+        this.webScrappedData = scrappedData;
+        // this.llmRequestData(this.webScrappedData);
+    }
+    llmRequestData() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (!GEMINI_API) {
+                    throw new Error("ENV KEY required");
+                }
+                const genAI = new generative_ai_1.GoogleGenerativeAI(GEMINI_API);
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const prompt = `
 
 Given the following query: ${this.query}, analyze the provided web-scraped data: ${this.webScrappedData} and generate a comprehensive response following these guidelines:
 
@@ -130,25 +137,27 @@ Neural networks are computational models inspired by biological brains, using in
 
 
       `;
-      const p = `
+                const p = `
       Question: ${this.query}
       Please provide a detailed answer with relevant information.
       Also include 3-4 reliable sources that support this information.
       Format the response as JSON with two keys:
       1. "answer": A comprehensive response to the question
-      2. "sources": An array of sources, each with "title", "url", and "snippet"`
-      const result = await model.generateContent(p);
-      console.log(result.response.text())
-      return result;
-
-    } catch (error) {
-        console.log(error)
+      2. "sources": An array of sources, each with "title", "url", and "snippet"`;
+                const result = yield model.generateContent(p);
+                console.log(result.response.text());
+                return result;
+            }
+            catch (error) {
+                console.log(error);
+            }
+        });
     }
-  }
 }
-
-export async function llmGenerateResponse(query: string, results: webScrapArray) {
-  const llm = new llmResponse(query, results);
-  const llmResponseData = await llm.llmRequestData();
-  return llmResponseData;
+function llmGenerateResponse(query, results) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const llm = new llmResponse(query, results);
+        const llmResponseData = yield llm.llmRequestData();
+        return llmResponseData;
+    });
 }

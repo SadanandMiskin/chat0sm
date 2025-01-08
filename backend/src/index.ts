@@ -1,44 +1,22 @@
-import express from "express";
-import axios from 'axios'
-import cors from 'cors'
-import { GenerateContentResponse, GenerateContentResult, GoogleGenerativeAI } from "@google/generative-ai";
+// import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
+import connectDB from './config/db';
+import chatRoutes from './routes/chatRoutes';
+import authRoutes from './routes/authRoutes';
 
-import webscrap from './routes/webscrap'
+
+// dotenv.config();
 
 const app = express();
-app.use(cors())
+connectDB();
+
+app.use(cors());
 app.use(express.json());
+app.use('/api/auth', authRoutes);
+app.use('/api/chat', chatRoutes);
 
-app.use('/api' , webscrap)
-
-
-
-// const API_KEY = process.env.GEMINI_API
-// if (!API_KEY) {
-//   throw new Error("GEMINI_API environment variable is not set");
-// }
-// app.get('/', async (req, res) => {
-//   try {
-//     // Initialize Google Generative AI client
-//     const genAI = new GoogleGenerativeAI( API_KEY);
-
-//     // Choose a model
-//     const model = await genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-//     // Generate content
-//     const prompt = "Explain how an LLM works";
-//     const response = await model.generateContent(prompt)
-
-//     // Return the result to the client
-//     res.json(response);
-//   } catch (error) {
-//     console.error("Error generating content:", error);
-//     res.status(500).json({ error: "An error occurred while generating content." });
-//   }
-// });
-
-
-
-app.listen(3000, () => {
-  console.log("Sever Listening");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
