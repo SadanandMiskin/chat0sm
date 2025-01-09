@@ -8,6 +8,6 @@ const chatController_1 = require("../controllers/chatController");
 const auth_1 = __importDefault(require("../middleware/auth"));
 const router = express_1.default.Router();
 router.post('/create', auth_1.default, chatController_1.createChat);
-router.post('/message', chatController_1.sendMessage);
+router.post('/message', auth_1.default, chatController_1.sendMessage);
 router.get('/list', auth_1.default, chatController_1.getChats);
 exports.default = router;

@@ -36,30 +36,40 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     var _a;
     try {
         const { chatId, message } = req.body;
-        // const chat = await Chat.findById(chatId);
-        // if (!chat) {
-        //   res.status(404).json({ error: 'Chat not found' });
-        //   return;
-        // }
+        const chat = yield Chat_1.default.findById(chatId);
+        if (!chat) {
+            res.status(404).json({ error: 'Chat not found' });
+            return;
+        }
+        const prompt = `Generate a well-structured response to the query below in markdown format, following these guidelines:
+
+    1. **Quick Answer**: Provide a concise 1-2 sentence summary that directly addresses the query.
+    2. **Detailed Explanation**: Elaborate with key points, actionable steps, or supporting analysis based on the query type (FACTUAL, ANALYTICAL, INSTRUCTIONAL, or GENERAL). Be precise and avoid unnecessary verbosity.
+    3. **Sources and References**: Cite reliable and relevant sources with proper attribution in the format: [Source Name](URL).
+
+    **Note**: Cache the response data to allow for efficient retrieval if the same query or related queries arise in the future.
+    # Query
+    ${message}
+`;
         // Add user message
-        // chat.messages.push({
-        //   role: 'user',
-        //   content: message,
-        //   timestamp: new Date(),
-        // });
+        chat.messages.push({
+            role: 'user',
+            content: message,
+            timestamp: new Date(),
+        });
         // Get Gemini response
-        const result = yield model.generateContent(message);
+        const result = yield model.generateContent(prompt);
         const aiMessage = (_a = result === null || result === void 0 ? void 0 : result.response) === null || _a === void 0 ? void 0 : _a.text();
         if (aiMessage) {
-            // chat.messages.push({
-            //   role: 'assistant',
-            //   content: aiMessage,
-            //   timestamp: new Date(),
-            // });
+            chat.messages.push({
+                role: 'assistant',
+                content: aiMessage,
+                timestamp: new Date(),
+            });
         }
-        // chat.lastUpdated = new Date();
-        // await chat.save();
-        res.json(aiMessage);
+        chat.lastUpdated = new Date();
+        yield chat.save();
+        res.json(chat);
     }
     catch (error) {
         res.status(500).json({ error: error });

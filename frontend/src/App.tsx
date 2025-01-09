@@ -1,75 +1,34 @@
-import { BrowserRouter } from 'react-router-dom';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { Toaster } from 'react-hot-toast';
-import { useAuth } from './contexts/AuthContext';
-import Layout from './components/Layout';
-import Chat from './pages/Chat';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Settings from './pages/Settings';
+import { Login } from './components/Login';
+import { Register } from './components/Register';
+// import ChatInterface from './components/ChatInterface';
 import ProtectedRoute from './components/ProtectedRoute';
+// import Chat from './components/Chat';
+import ChatInterface from './components/ChatInterface';
+import Chat from './components/Chat';
 
-export default function App() {
+const App: React.FC = () => {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatInterface />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to="/chat" replace />} />
+        </Routes>
+      </Router>
     </AuthProvider>
   );
-}
+};
 
-function AppContent() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <Routes>
-        {/* Public routes */}
-        <Route
-          path="/login"
-          element={user ? <Navigate to="/" /> : <Login />}
-        />
-        <Route
-          path="/register"
-          element={user ? <Navigate to="/" /> : <Register />}
-        />
-
-        {/* Protected routes */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Chat />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Settings />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Catch all route */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-      <Toaster />
-    </>
-  );
-}
+export default App;

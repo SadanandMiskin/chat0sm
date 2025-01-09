@@ -1,16 +1,7 @@
 {
-  "compilerOptions": {
-    "jsx": "react-jsx", // Enables support for JSX
-    "allowSyntheticDefaultImports": true, // Allows default imports for React
-    "esModuleInterop": true, // Improves module compatibility
-    "module": "ESNext", // Uses modern JavaScript modules
-    "target": "ESNext", // Targets modern JavaScript
-    "moduleResolution": "node", // Resolves modules in a Node.js style
-    "baseUrl": "./", // Ensures base path for imports
-    "paths": {
-      "@/components/*": ["src/components/*"] // Add your alias here
-    }
-  },
-  "include": ["src"], // Ensures the source directory is included
-  "exclude": ["node_modules"]
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
 }

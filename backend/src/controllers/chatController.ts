@@ -29,6 +29,17 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
+    const prompt = `Generate a well-structured response to the query below in markdown format, following these guidelines:
+
+    1. **Quick Answer**: Provide a concise 1-2 sentence summary that directly addresses the query.
+    2. **Detailed Explanation**: Elaborate with key points, actionable steps, or supporting analysis based on the query type (FACTUAL, ANALYTICAL, INSTRUCTIONAL, or GENERAL). Be precise and avoid unnecessary verbosity.
+    3. **Sources and References**: Cite reliable and relevant sources with proper attribution in the format: [Source Name](URL).
+
+    **Note**: Cache the response data to allow for efficient retrieval if the same query or related queries arise in the future.
+    # Query
+    ${message}
+`
+
     // Add user message
     chat.messages.push({
       role: 'user',
@@ -37,7 +48,7 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
     });
 
     // Get Gemini response
-    const result = await model.generateContent(message);
+    const result = await model.generateContent(prompt);
     const aiMessage = result?.response?.text();
 
     if (aiMessage) {
@@ -57,6 +68,20 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
+
+
+export async function chatName(req: Request , res: Response): Promise<void> {
+    try {
+      const {chatId, chatTitle} = req.body
+      const updatedChatName = await Chat.updateOne({_id: chatId} , {$set:{title: chatTitle}});
+      if(!updatedChatName) {
+        res.status(404).json({ error: 'Chat not found' });
+        return;
+      }
+    } catch (error) {
+      res.status(404).json({ error: 'Chat not found' });
+    }
+}
 
 export const getChats = async (req: Request, res: Response): Promise<void> => {
   try {
