@@ -36,6 +36,9 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
     3. **Sources and References**: Cite reliable and relevant sources with proper attribution in the format: [Source Name](URL).
 
     **Note**: Cache the response data to allow for efficient retrieval if the same query or related queries arise in the future.
+
+    **Note**: If the query or message is too generic then just reply it no need for sources and detailed explanation
+    **Note**: Don't tell which AI model you are ok.
     # Query
     ${message}
 `
@@ -70,17 +73,20 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
 
 
 
-export async function chatName(req: Request , res: Response): Promise<void> {
-    try {
-      const {chatId, chatTitle} = req.body
-      const updatedChatName = await Chat.updateOne({_id: chatId} , {$set:{title: chatTitle}});
-      if(!updatedChatName) {
-        res.status(404).json({ error: 'Chat not found' });
-        return;
-      }
-    } catch (error) {
+export async function chatName(req: Request, res: Response): Promise<void> {
+  try {
+    const { chatId, chatTitle } = req.body;
+    // console.log(chatTitle)
+    const updatedChatName = await Chat.findOneAndUpdate({ _id: chatId }, { $set: { title: chatTitle } }, { new: true });
+    if (!updatedChatName) {
       res.status(404).json({ error: 'Chat not found' });
+      return;
     }
+    res.status(200).json({ message: 'Chat title updated successfully', title: updatedChatName.title });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 }
 
 export const getChats = async (req: Request, res: Response): Promise<void> => {

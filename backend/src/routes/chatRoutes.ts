@@ -9,6 +9,6 @@ const router = express.Router();
 router.post('/create', auth, createChat);
 router.post('/message', auth,  sendMessage);
 router.get('/list', auth, getChats);
-router.post('/change-chat' , auth, chatName)
+router.post('/changechat' , auth, chatName)
 
 export default router;

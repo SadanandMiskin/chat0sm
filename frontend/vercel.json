@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "routes": [
+
+    {
+      "src": "/(.*).(js|css|map|ico|png|jpg|jpeg|svg|webp|woff|woff2|ttf|eot|otf|gif|mp4)",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

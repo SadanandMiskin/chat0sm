@@ -1,7 +1,7 @@
 // services/api.ts
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api';
+export const API_URL = 'https://bechat0sm.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -26,7 +26,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.location.href = '/';
     }
     return Promise.reject(error);
   }

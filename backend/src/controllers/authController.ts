@@ -7,7 +7,7 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { username, email, password }: { username: string; email: string; password: string } = req.body;
 
-    // Check if user exists
+  
     const user = await User.findOne({ $or: [{ email }, { username }] });
     if (user) {
       return res.status(400).json({ error: 'User already exists' });

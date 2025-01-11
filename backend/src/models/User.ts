@@ -8,6 +8,7 @@ interface IUser extends Document {
   password: string;
   createdAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
+  googleId: string;
 }
 
 // User Schema
@@ -30,6 +31,10 @@ const userSchema = new Schema<IUser>({
     type: Date,
     default: Date.now,
   },
+  googleId: {
+    type: String,
+    sparse: true
+  }
 });
 
 // Hash password before saving

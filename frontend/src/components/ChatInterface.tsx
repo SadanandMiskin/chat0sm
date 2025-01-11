@@ -1,314 +1,10 @@
-// import React, { useState, useEffect, useRef } from 'react';
-// import { Send, Menu, Plus, LogOut } from 'lucide-react';
-// import { useAuth } from '../contexts/AuthContext';
-// import axios from 'axios';
-
-// interface Message {
-//   role: 'user' | 'system';
-//   content: string;
-// }
-
-// interface Chat {
-//   _id: string;
-//   title: string;
-//   messages: Message[];
-// }
-
-// const ChatInterface: React.FC = () => {
-//   const { token, logout } = useAuth();
-//   const [message, setMessage] = useState<string>('');
-//   const [chats, setChats] = useState<Chat[]>([]);
-//   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
-//   const [isLoading, setIsLoading] = useState<boolean>(false);
-//   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-//   const [loadingMessage, setLoadingMessage] = useState<string>('');
-//   const [typingEffect, setTypingEffect] = useState<string>('');
-//   const [status, setStatus] = useState<string>('Percepta is thinking...');
-//   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
-//   const scrollToBottom = () => {
-//     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-//   };
-
-//   useEffect(() => {
-//     let currentIndex = 0;
-//     const states = [
-//       'Percepta is thinking...',
-//       'Percepta is processing...',
-//       'Percepta is framing...'
-//     ];
-
-//     const intervalId = setInterval(() => {
-//       setStatus(states[currentIndex]);
-//       currentIndex = (currentIndex + 1) % states.length;
-//     }, 3000);
-
-//     fetchChats();
-
-//     return () => clearInterval(intervalId);
-//   }, []);
-
-//   useEffect(() => {
-//     scrollToBottom();
-//   }, [currentChat, typingEffect]);
-
-//   const fetchChats = async () => {
-//     try {
-//       const response = await axios.get<Chat[]>('http://localhost:3000/api/chat/list', {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setChats(response.data || []);
-//       if (response.data.length && !currentChat) {
-//         setCurrentChat(response.data[0]);
-//       }
-//     } catch (error) {
-//       console.error('Error fetching chats:', error);
-//     }
-//   };
-
-//   const createNewChat = async () => {
-//     try {
-//       const response = await axios.post<Chat>(
-//         'http://localhost:3000/api/chat/create',
-//         {},
-//         {
-//           headers: { Authorization: `Bearer ${token}` },
-//         }
-//       );
-//       setCurrentChat(response.data);
-//       fetchChats();
-//     } catch (error) {
-//       console.error('Error creating chat:', error);
-//     }
-//   };
-
-//   const simulateTypingEffect = (responseContent: string) => {
-//     let index = 0;
-//     setTypingEffect('');
-//     const interval = setInterval(() => {
-//       if (index < responseContent.length) {
-//         setTypingEffect((prev) => prev + responseContent[index]);
-//         index++;
-//       } else {
-//         clearInterval(interval);
-//       }
-//     }, 5);
-//   };
-
-//   const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
-//     e.preventDefault();
-//     if (!message.trim()) return;
-
-//     const newMessage: Message = { role: 'user', content: message };
-//     setCurrentChat((prevChat) => {
-//       if (!prevChat) return null;
-//       return {
-//         ...prevChat,
-//         messages: [...prevChat.messages, newMessage],
-//       };
-//     });
-
-//     setMessage('');
-//     setIsLoading(true);
-//     setLoadingMessage(status);
-
-//     try {
-//       const response = await axios.post<Chat>(
-//         'http://localhost:3000/api/chat/message',
-//         {
-//           chatId: currentChat?._id,
-//           message: newMessage.content,
-//         },
-//         {
-//           headers: { Authorization: `Bearer ${token}` },
-//         }
-//       );
-
-//       if (response.data.messages.length > 0) {
-//         const systemMessage = response.data.messages[response.data.messages.length - 1];
-
-//         // Start typing effect first
-//         simulateTypingEffect(systemMessage.content);
-
-//         // Wait for typing effect to complete before updating chat
-//         setTimeout(() => {
-//           setCurrentChat((prevChat) => {
-//             if (!prevChat) return null;
-//             return {
-//               ...prevChat,
-//               messages: [...prevChat.messages, systemMessage],
-//             };
-//           });
-//           setTypingEffect('');
-//         }, systemMessage.content.length * 50); // Match the typing effect delay
-//       }
-//     } catch (error) {
-//       console.error('Error sending message:', error);
-//     } finally {
-//       setIsLoading(false);
-//       setLoadingMessage('');
-//     }
-//   };
-
-
-//   // const LoadingSpinner = () => (
-//   //   <div className="flex items-center justify-center p-4">
-//   //     <div className="relative">
-//   //       <Loader className="w-8 h-8 animate-spin text-indigo-600" />
-//   //       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full" />
-//   //     </div>
-//   //   </div>
-//   // );
-
-//   return (
-//     <div className="flex h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
-//       {/* Sidebar */}
-//       <div
-//         className={`fixed inset-y-0 left-0 z-50 w-72 bg-white/80 backdrop-blur-lg shadow-2xl transform ${
-//           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-//         } transition-all duration-300 ease-out md:translate-x-0 md:static`}
-//       >
-//         <div className="flex flex-col h-full">
-//           <div className="p-6">
-//             <button
-//               onClick={createNewChat}
-//               className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:shadow-lg hover:shadow-indigo-200 transition-all duration-300 hover:scale-105 transform"
-//             >
-//               <Plus size={20} />
-//               New Adventure
-//             </button>
-//           </div>
-
-//           <div className="flex-1 overflow-y-auto px-4">
-//             {chats.map((chat) => (
-//               <button
-//                 key={chat._id}
-//                 onClick={() => setCurrentChat(chat)}
-//                 className={`w-full p-4 text-left hover:bg-white rounded-xl transition-all duration-300 mb-2 ${
-//                   currentChat?._id === chat._id
-//                     ? 'bg-white shadow-lg shadow-indigo-100 scale-105'
-//                     : 'hover:scale-102'
-//                 }`}
-//               >
-//                 <p className="truncate text-sm font-medium">{chat.title}</p>
-//               </button>
-//             ))}
-//           </div>
-
-//           <div className="p-6">
-//             <button
-//               onClick={logout}
-//               className="w-full flex items-center justify-center gap-2 px-6 py-3 text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-all duration-300 hover:shadow-md"
-//             >
-//               <LogOut size={20} />
-//               Beam Out
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Main Content */}
-//       <div className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
-//         <header className="bg-white/80 backdrop-blur-lg shadow-sm p-6">
-//           <div className="flex items-center justify-between">
-//             <button
-//               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-//               className="md:hidden p-2 hover:bg-gray-100 rounded-xl transition-all duration-300"
-//             >
-//               <Menu size={24} />
-//             </button>
-//             <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-//               Cosmic Chat
-//             </h1>
-//             <div className="w-8" />
-//           </div>
-//         </header>
-
-//         {/* Messages */}
-//         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-//           <div className="max-w-4xl mx-auto w-full">
-//             {currentChat?.messages?.map((msg, index) => (
-//               <div
-//               key={index}
-//               className={`flex ${
-//                 msg.role === 'user' ? 'justify-end' : 'justify-start'
-//               }`}
-//             >
-//               <div
-//                 className={`max-w-lg px-6 py-4 rounded-xl ${
-//                   msg.role === 'user'
-//                     ? 'bg-indigo-600 text-white rounded-br-none'
-//                     : 'bg-white text-gray-800 shadow-md rounded-bl-none'
-//                 }`}
-//               >
-//                 <p className="whitespace-pre-wrap break-words">
-//                   {msg.content}
-//                 </p>
-//               </div>
-//             </div>
-//           ))}
-//           {isLoading && (
-//             <div className="flex justify-start">
-//               <div className="max-w-lg px-6 py-4 rounded-xl bg-white text-gray-800 shadow-md rounded-bl-none">
-//                 <p className="whitespace-pre-wrap break-words animate-pulse">
-//                   {loadingMessage}
-//                 </p>
-//               </div>
-//             </div>
-//           )}
-//           {typingEffect && (
-//             <div className="flex justify-start">
-//               <div className="max-w-lg px-6 py-4 rounded-xl bg-white text-gray-800 shadow-md rounded-bl-none">
-//                 <p className="whitespace-pre-wrap break-words">{typingEffect}</p>
-//               </div>
-//             </div>
-//           )}
-//           <div ref={messagesEndRef} />
-//         </div>
-//       </div>
-
-//       {/* Message Input */}
-//       <div className="p-6 bg-white/80 backdrop-blur-lg shadow-lg">
-//         <form
-//           onSubmit={sendMessage}
-//           className="flex items-center gap-4 max-w-4xl mx-auto"
-//         >
-//           <input
-//             type="text"
-//             value={message}
-//             onChange={(e) => setMessage(e.target.value)}
-//             placeholder="Send a message..."
-//             className="flex-1 px-4 py-3 text-gray-800 bg-white border rounded-2xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-//           />
-//           <button
-//             type="submit"
-//             disabled={isLoading}
-//             className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:shadow-lg hover:shadow-indigo-200 transition-all duration-300 hover:scale-105 transform disabled:opacity-50 disabled:cursor-not-allowed"
-//           >
-//             <Send size={20} />
-//             Send
-//           </button>
-//         </form>
-//       </div>
-//     </div>
-//   </div>
-// );
-// };
-
-// export default ChatInterface;
-
-
-
-
-
-
-
-
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Menu, Plus, LogOut } from 'lucide-react';
+import { Send, Menu, Plus, LogOut, Pen, Save, ShieldClose, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import EmptyState from './EmptyState';
+import { API_URL } from '../services/api';
 
 interface Message {
   role: 'user' | 'system';
@@ -331,7 +27,9 @@ const ChatInterface: React.FC = () => {
   const [typingEffect, setTypingEffect] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   // const [loadingMessage, setLoadingMessage] = useState<string>('');
-  const [status, setStatus] = useState<string>('thinking');
+  const [status, setStatus] = useState<string>('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [newTitle, setNewTitle] = useState(currentChat?.title || 'New Chat');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -345,26 +43,30 @@ const ChatInterface: React.FC = () => {
 );
 
   const renderLoadingState = () => {
-    const getLoadingEmoji = () => {
-      switch (status) {
-        case 'thinking': return '🤔';
-        case 'processing': return '⚡';
-        case 'framing': return '🎯';
-        default: return '💭';
-      }
-    };
+    // const getLoadingEmoji = () => {
+    //   switch (status) {
+    //     case 'thinking': return '🤔';
+    //     case 'processing': return '⚡';
+    //     case 'framing': return '🎯';
+    //     default: return '💭';
+    //   }
+    // };
 
     return (
-      <div className="flex items-center gap-2 text-gray-600 py-2">
-        <span className="animate-pulse">{getLoadingEmoji()}</span>
-        <span className="font-medium">Percepta is {status}</span>
+      <div className="flex items-center gap-2 text-gray-600 py-2 p-4">
+        <img
+          src="p.png" // replace with your image URL
+          alt="Loading"
+          className="w-7 h-6 loading-icon"
+        />
+        <span className="font-bold text-xl">{status}</span>
         <LoadingDots />
       </div>
     );
   };
   useEffect(() => {
     let currentIndex = 0;
-    const states = ['Percepta is thinking...', 'Percepta is processing...', 'Percepta is framing...'];
+    const states = ['Chat0sm is thinking...', 'Chat0sm is processing...', 'Chat0sm is framing...'];
 
     const intervalId = setInterval(() => {
       setStatus(states[currentIndex]);
@@ -382,7 +84,7 @@ const ChatInterface: React.FC = () => {
 
   const fetchChats = async () => {
     try {
-      const response = await axios.get<Chat[]>('http://localhost:3000/api/chat/list', {
+      const response = await axios.get<Chat[]>(`${API_URL}/chat/list`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setChats(response.data || []);
@@ -397,7 +99,7 @@ const ChatInterface: React.FC = () => {
   const createNewChat = async () => {
     try {
       const response = await axios.post<Chat>(
-        'http://localhost:3000/api/chat/create',
+        `${API_URL}/chat/create`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -437,7 +139,7 @@ const ChatInterface: React.FC = () => {
 
     try {
       const response = await axios.post<Chat>(
-        'http://localhost:3000/api/chat/message',
+        `${API_URL}/chat/message`,
         {
           chatId: currentChat?._id,
           message: newMessage.content,
@@ -476,51 +178,121 @@ const ChatInterface: React.FC = () => {
       image: /!\[([^\]]*)\]\(([^)]+)\)/g,
       code: /```([\s\S]*?)```/g,
       inlineCode: /`([^`]+)`/g,
-      blockquote: />\s*(.*)/g, // Handle blockquotes
-      unorderedList: /- (.*)/g, // Handle unordered lists
-      orderedList: /\d+\. (.*)/g, // Handle ordered lists
-      heading: /^(#{1,6})\s*(.*)/g, // Handle headings
+      blockquote: />\s*(.*)/g,
+      unorderedList: /- (.*)/g,
+      orderedList: /\d+\. (.*)/g,
+      heading: /^(#{1,3})\s*(.*)$/gm,
+      newline: /\n/g,
     };
 
     const contentWithReplacements = content
-      .replace(markdownPatterns.image, (_, alt, src) => {
-        return `<div class="image-container my-4 max-w-2xl">
-          <img alt="${alt}" src="${src}" class="w-full h-auto rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300" loading="lazy" />
-        </div>`;
-      })
-      .replace(markdownPatterns.code, (_, code) => {
-        return `<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg my-4 overflow-x-auto"><code>${code}</code></pre> `;
-      })
-      .replace(markdownPatterns.inlineCode, (_, code) => {
-        return `<code class="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded font-mono text-sm">${code}</code> >`;
-      })
-      .replace(markdownPatterns.link, (_, text, url) => {
-        return `<a href="${url}" class="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">${text}</a> `;
-      })
-      .replace(markdownPatterns.bold, (_, text) => `<strong class="font-semibold">${text}</strong>`)
-      .replace(markdownPatterns.italic, (_, text) => `<em class="italic">${text}</em>`)
-      .replace(markdownPatterns.blockquote, (_, text) => {
-        return `<br> <blockquote class="border-l-4 pl-4 my-4 italic text-gray-600">${text}</blockquote>`;
-      })
-      .replace(markdownPatterns.unorderedList, (_, text) => {
-        return `<ul class="list-disc pl-5 my-4"><li>${text}</li></ul> `;
-      })
-      .replace(markdownPatterns.orderedList, (_, text) => {
-        return `<ol class="list-decimal pl-5 my-4"><li>${text}</li></ol>`;
-      })
+      .replace(markdownPatterns.image, (_, alt, src) => (
+        `<div class="image-container my-1 max-w-xl group">
+          <img alt="${alt}" src="${src}" class="w-full h-auto rounded-lg shadow-lg group-hover:scale-102 transform transition duration-200 ease-out" loading="lazy" />
+        </div>`
+      ))
+      .replace(markdownPatterns.code, (_, code) => (
+        `<pre class="bg-gradient-to-br from-gray-900 to-black text-white p-2.5 rounded-md my-1.5 overflow-x-auto border border-gray-700 shadow-lg hover:shadow-xl transition-shadow duration-200">
+          <code class="font-mono text-sm">${code}</code>
+        </pre>`
+      ))
+      .replace(markdownPatterns.inlineCode, (_, code) => (
+        `<code class="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded-md font-mono text-sm border border-gray-200 hover:bg-gray-200 transition-colors duration-150">${code}</code>`
+      ))
+      .replace(markdownPatterns.link, (_, text, url) => (
+        `<a href="${url}" class="text-blue-600 hover:text-blue-800 hover:underline transition-all duration-150 ease-in-out" target="_blank" rel="noopener noreferrer">${text}</a>`
+      ))
+      .replace(markdownPatterns.bold, (_, text) =>
+        `<strong class="font-bold text-gray-900">${text}</strong>`
+      )
+      .replace(markdownPatterns.italic, (_, text) =>
+        `<em class="italic text-gray-700">${text}</em>`
+      )
+      // .replace(markdownPatterns.blockquote, (_, text) => (
+      //   `<blockquote class="border-l-4 border-blue-500 pl-3 py-0.5 my-1 text-gray-700 bg-blue-50 rounded-r-lg italic transform hover:translate-x-1 transition-transform duration-200">${text}</blockquote>`
+      // ))
+      // .replace(markdownPatterns.unorderedList, (_, text) => (
+      //   `<ul class="list-disc pl-4 space-y-0.5 marker:text-blue-500"><li class="hover:translate-x-1 transition-transform duration-150">${text}</li></ul>`
+      // ))
+      // .replace(markdownPatterns.orderedList, (_, text) => (
+      //   `<ol class="list-decimal pl-4 space-y-0.5 marker:text-blue-500"><li class="hover:translate-x-1 transition-transform duration-150">${text}</li></ol>`
+      // ))
       .replace(markdownPatterns.heading, (_, hashes, text) => {
-        const level = hashes.length;
-        return ` <h${level} class="text-${level === 1 ? '3xl' : 'xl'} font-semibold mt-6 mb-3">${text}</h${level}> `;
-      });
+        const level = hashes.length as 1 | 2 | 3;
+      const sizes: { [key in 1 | 2 | 3]: string } = {
+        1: 'text-2xl',
+        2: 'text-xl',
+        3: 'text-lg',
+      };
+        return `<h${level} class="${sizes[level]} font-bold text-gray-900 border-b border-gray-200 pb-1 hover:text-blue-700 transition-colors duration-200">${text}</h${level}>`;
+      })
+      .replace(markdownPatterns.newline, () => '<br class="my-0.5" />');
 
-    return <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: contentWithReplacements }} />;
+    return (
+      <div
+        className="prose prose-sm max-w-none space-y-1.5 leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: contentWithReplacements }}
+      />
+    );
   };
 
+
+
+  const handleEditTitle = () => {
+    setIsEditing(true);
+  };
+
+  const handleSaveTitle = async () => {
+    if (!newTitle || newTitle === currentChat?.title) {
+      // If there's no change or the title is empty, do nothing
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/chat/changechat`,
+        { chatId: currentChat?._id, chatTitle: newTitle },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = response.data;
+      console.log(data);
+      setNewTitle(data.title); // Update the title after successful API call
+      setCurrentChat((prevChat) =>
+        prevChat ? { ...prevChat, title: data.title } : prevChat
+      );
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsEditing(false); // Exit edit mode
+    }
+  };
+
+  const handleClose = () => {
+   setIsEditing(false)
+  };
+
+  const NoChatsMessage = () => (
+    <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-4">
+      <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded shadow-md max-w-md">
+        <p className="font-bold">Welcome to Chat0sm!</p>
+        <p className="mt-2">To get started, please create a new chat using the "New Chat" button in the menu.</p>
+        {!isSidebarOpen && (
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="mt-4 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 transition-colors inline-flex items-center gap-2"
+          >
+            <Menu size={20} />
+            Open Menu
+          </button>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex h-screen bg-gray-50">
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-gray-900 transform ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-gray-300/50 transform ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } transition-all duration-300 md:translate-x-0 md:static`}
       >
@@ -528,7 +300,7 @@ const ChatInterface: React.FC = () => {
           <div className="p-4">
             <button
               onClick={createNewChat}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
             >
               <Plus size={20} />
               New Chat
@@ -540,7 +312,7 @@ const ChatInterface: React.FC = () => {
                 key={chat._id}
                 onClick={() => setCurrentChat(chat)}
                 className={`w-full px-4 py-3 text-left hover:bg-gray-700 transition-colors ${
-                  currentChat?._id === chat._id ? 'bg-gray-700' : 'text-gray-300'
+                  currentChat?._id === chat._id ? 'bg-gray-400' : 'text-black'
                 }`}
               >
                 {chat.title || 'New Chat'}
@@ -550,7 +322,7 @@ const ChatInterface: React.FC = () => {
           <div className="p-4 border-t border-gray-700">
             <button
               onClick={logout}
-              className="w-full flex items-center gap-2 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              className="w-full flex items-center gap-2 px-4 py-3 text-black hover:bg-white rounded-lg transition-colors"
             >
               <LogOut size={20} />
               Sign Out
@@ -558,36 +330,108 @@ const ChatInterface: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <div className="flex-1 flex flex-col w-dvw">
-        <header className="bg-white border-b border-gray-200 p-4">
-          <div className="flex items-center justify-between max-w-6xl mx-auto">
+      {isSidebarOpen && (
+    <div
+      className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden"
+      onClick={() => setIsSidebarOpen(false)} // Close sidebar on overlay click
+    />
+  )}
+      <div className="flex-1 flex flex-col w-dvw ">
+      <header className="bg-white border-b border-gray-200 p-4 pt- ">
+          <div className="flex items-center justify-between gap-5 max-w-6xl mx-auto">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Menu size={24} />
             </button>
-            <h1 className="text-xl font-semibold text-gray-800">{currentChat?.title || 'New Chat'}</h1>
+            <div className='flex flex-row gap-2 items-center justify-start'>
+            {isEditing ? (
+              <input
+                type="text"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                className="border border-gray-300 rounded-lg p-2"
+              />
+            ) : (
+              <h1 className="text-xl font-semibold text-gray-800">{currentChat?.title}</h1>
+            )}
+            {isEditing ? (
+              <>
+              <button
+                onClick={handleSaveTitle}
+                disabled={!newTitle || newTitle === currentChat?.title}
+                className={`px-1 py-1 rounded-lg text-white ${
+                  !newTitle || newTitle === currentChat?.title
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                <Save />
+              </button>
+              <button
+                onClick={handleClose}
+                disabled={!newTitle || newTitle === currentChat?.title}
+                className={`px-1 py-1 rounded-lg text-white ${
+                  !newTitle || newTitle === currentChat?.title
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                <ShieldClose />
+              </button>
+              </>
+            ) : (
+              <button
+                onClick={handleEditTitle}
+                className="px-1 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                <Pen />
+              </button>
+            )}
+
+            </div>
+            <div className='flex items-center justify-center '>
+            <img src='p.png'
+              className='w-9 '
+            />
+            <h1 className='font-bold'>Chat0sm</h1>
+            </div>
           </div>
         </header>
 
+
         <div className="flex-1 overflow-y-auto px-4 py-6">
           <div className="max-w-3xl mx-auto space-y-6">
-            {currentChat?.messages?.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${msg.role === 'user' ? 'justify-start' : 'justify-start'} items-start gap-4`}
-              >
-                <div
-                  className={`max-w-[85%] px-6 py-4 rounded-2xl ${
-                    msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white shadow-sm border border-gray-200'
-                  }`}
-                >
-                  {renderContent(msg.content)}
-                </div>
-              </div>
-            ))}
+              {!chats.length ? (
+                <NoChatsMessage />
+              ) : (
+                currentChat?.messages?.length === 0 ? (
+                  <EmptyState />
+                ) : (
+                  <>
+                    {currentChat?.messages?.map((msg, index) => (
+                      <div
+                        key={index}
+                        className={`flex ${msg.role === 'user' ? 'justify-start' : 'justify-end'} items-start gap-4`}
+                      >
+                          {msg.role == 'user' ? <User/> : <></>}
+
+                        <div
+                          className={`max-w-[85%] px-6 py-4 rounded-2xl ${
+                            msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white shadow-sm border border-gray-200'
+                          }`}
+                        >
+                          {renderContent(msg.content)}
+                        </div>
+                        {msg.role == 'user' ? <></> : <><img src='p.png' className='w-6'/></>}
+
+                      </div>
+                    ))}
+                  </>
+                )
+              )}
+
             {isLoading && (
               <div className="flex justify-start">
                 <div className="max-w-lg px-6 py-4 rounded-xl bg-white text-gray-800 shadow-md rounded-bl-none">
@@ -596,10 +440,14 @@ const ChatInterface: React.FC = () => {
               </div>
             )}
             {typingEffect && (
-              <div className="flex justify-start items-start gap-4">
+              <div className="flex justify-end items-start gap-4">
+
                 <div className="max-w-[85%] px-6 py-4 rounded-2xl bg-white shadow-sm border border-gray-200">
+
                   {renderContent(typingEffect)}
                 </div>
+             <><img src='p.png' className='w-6'/></>
+
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -616,11 +464,12 @@ const ChatInterface: React.FC = () => {
                 rows={1}
                 className="w-full px-4 py-3 bg-transparent focus:outline-none resize-none"
                 style={{ minHeight: '44px', maxHeight: '200px' }}
+                disabled={!chats.length}
               />
             </div>
             <button
               type="submit"
-              disabled={isLoading || !message.trim()}
+              disabled={isLoading || !message.trim() || !chats.length}
               className="flex items-center justify-center p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 transition-colors"
             >
               <Send size={20} />
