@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Chat from '../models/Chat';
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import {ChatFireworks} from '@langchain/community/chat_models/fireworks'
 
 const genAI: any = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model: any = genAI.getGenerativeModel({ model: 'gemini-pro' });
@@ -23,24 +24,23 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
   try {
     const { chatId, message } = req.body;
     const chat = await Chat.findById(chatId);
+    // console.log(message, chat)
 
     if (!chat) {
       res.status(404).json({ error: 'Chat not found' });
       return;
     }
 
-    const prompt = `Generate a well-structured response to the query below in markdown format, following these guidelines:
+    const systemPrompt = ` Your name is Chat0sm. and you are a good assistance who answer questions,  Answer the following query using this structure:
 
-    1. **Quick Answer**: Provide a concise 1-2 sentence summary that directly addresses the query.
-    2. **Detailed Explanation**: Elaborate with key points, actionable steps, or supporting analysis based on the query type (FACTUAL, ANALYTICAL, INSTRUCTIONAL, or GENERAL). Be precise and avoid unnecessary verbosity.
-    3. **Sources and References**: Cite reliable and relevant sources with proper attribution in the format: [Source Name](URL).
+    If a question is too general then answer in general without any quick answer, detailed or sources. Or:
+Quick Answer: A short 1–2 sentence response.
 
-    **Note**: Cache the response data to allow for efficient retrieval if the same query or related queries arise in the future.
+Detailed Explanation: A clear, well-structured, and actionable breakdown based on the query type (FACTUAL, ANALYTICAL, INSTRUCTIONAL, or GENERAL).
 
-    **Note**: If the query or message is too generic then just reply it no need for sources and detailed explanation
-    **Note**: Don't tell which AI model you are ok.
-    # Query
-    ${message}
+Sources and References: Add reliable and relevant links in the format Source Name.
+
+Only include sources if the query is not too generic. Cache the response for future similar queries.
 `
 
     // Add user message
@@ -51,13 +51,22 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
     });
 
     // Get Gemini response
-    const result = await model.generateContent(prompt);
-    const aiMessage = result?.response?.text();
+    // const result = await model.generateContent(systemPrompt);
+    // const aiMessage = result?.response?.text();
+    const llm = new ChatFireworks({
+      model: "accounts/fireworks/models/llama-v3p1-70b-instruct",
+      temperature: 0,
+      apiKey: process.env.GEMINI_API_KEY
+    })
+    const aiMessage = await llm.invoke([[
+      'system', systemPrompt
+    ], ['human' ,message]])
 
+    // console.log(aiMessage.content)
     if (aiMessage) {
       chat.messages.push({
         role: 'assistant',
-        content: aiMessage,
+        content: (aiMessage.content).toString(),
         timestamp: new Date(),
       });
     }
